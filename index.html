@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>야구 스코어보드</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&family=Roboto:wght@700&display=swap" rel="stylesheet">
+
+    <style>
+
+        /* CameraFi Live에서 크로마키로 배경을 제거하려면 아래 background-color를 'green'으로 변경하세요. */
+
+        body {
+
+            background-color: green; /* 기본 배경은 투명 */
+
+            font-family: 'Nanum Gothic Coding', 'Roboto', sans-serif;
+
+            color: white;
+
+            overflow: hidden;
+
+            -webkit-user-select: none;
+
+            -moz-user-select: none;
+
+            -ms-user-select: none;
+
+            user-select: none;
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+            align-items: center;
+
+            min-height: 100vh; /* Ensure body takes full viewport height */
+
+            padding: 20px;
+
+            box-sizing: border-box; /* Include padding in element's total width and height */
+
+        }
+
+        .scoreboard-container {
+
+            background-color: rgba(0, 0, 0, 0.8);
+
+            border-radius: 16px; /* Increased rounded corners */
+
+            border: 2px solid rgba(255, 255, 255, 0.3);
+
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6); /* Enhanced shadow */
+
+            padding: 20px;
+
+            width: 95%;
+
+            max-width: 650px; /* Slightly increased max-width */
+
+            margin: 0 auto; /* Centered horizontally */
+
+        }
+
+        .team-name {
+
+            font-size: 2.2rem; /* Slightly larger font */
+
+            font-weight: 700;
+
+            padding: 6px 10px;
+
+            border-radius: 8px;
+
+            transition: background-color 0.3s, transform 0.2s;
+
+            cursor: text; /* Indicate editable */
+
+        }
+
+        .team-name:focus {
+
+            background-color: rgba(255, 255, 255, 0.25); /* Slightly brighter on focus */
+
+            outline: none;
+
+            transform: scale(1.02); /* Slight scale on focus */
+
+        }
+
+        .score {
+
+            font-size: 4.5rem; /* Larger score font */
+
+            font-weight: 700;
+
+            font-family: 'Roboto', sans-serif;
+
+            width: 120px; /* Wider score display */
+
+            text-align: center;
+
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); /* Subtle glow */
+
+        }
+
+        .inning-display {
+
+            font-size: 2.8rem; /* Larger inning font */
+
+            font-weight: 700;
+
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+
+        }
+
+        .bso-container span {
+
+            width: 36px; /* Larger BSO indicators */
+
+            height: 36px;
+
+            border-radius: 50%;
+
+            display: inline-block;
+
+            margin: 0 6px; /* Slightly more spacing */
+
+            border: 2px solid rgba(255, 255, 255, 0.6); /* Thicker border */
+
+            transition: background-color 0.3s, transform 0.2s;
+
+        }
+
+        .bso-label {
+
+            font-size: 1.1rem; /* Slightly larger label */
+
+            font-weight: 700;
+
+        }
+
+        .ball.active { background-color: #34d399; /* Green */ transform: scale(1.1); }
+
+        .strike.active { background-color: #f87171; /* Red */ transform: scale(1.1); }
+
+        .out.active { background-color: #fbbf24; /* Amber */ transform: scale(1.1); }
+
+
+
+        .controls-container {
+
+            background-color: rgba(0, 0, 0, 0.6); /* Slightly darker controls background */
+
+            border-radius: 16px;
+
+            padding: 20px;
+
+            margin-top: 20px;
+
+            width: 95%;
+
+            max-width: 650px;
+
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+
+        }
+
+        .control-btn {
+
+            background-image: linear-gradient(to bottom right, #4a5568, #2d3748); /* Gradient */
+
+            color: white;
+
+            font-weight: 700;
+
+            padding: 12px 18px; /* Larger padding */
+
+            border-radius: 10px; /* More rounded */
+
+            border: none;
+
+            cursor: pointer;
+
+            transition: all 0.2s ease-in-out; /* Smooth transition for all properties */
+
+            font-size: 1.05rem;
+
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+
+        }
+
+        .control-btn:hover {
+
+            background-image: linear-gradient(to bottom right, #5a6578, #3d4758); /* Darker gradient on hover */
+
+            transform: translateY(-2px) scale(1.02); /* Lift and slightly scale */
+
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+
+        }
+
+        .control-btn:active {
+
+            transform: translateY(0) scale(0.98); /* Press effect */
+
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+
+        }
+
+        .control-btn.reset-btn {
+
+            background-image: linear-gradient(to bottom right, #c53030, #9b2c2c); /* Red gradient */
+
+            box-shadow: 0 4px 10px rgba(197, 48, 48, 0.4);
+
+        }
+
+        .control-btn.reset-btn:hover {
+
+            background-image: linear-gradient(to bottom right, #d54040, #ab3c3c); /* Darker red gradient on hover */
+
+            box-shadow: 0 6px 15px rgba(197, 48, 48, 0.5);
+
+        }
+
+
+
+        /* Custom Modal Styles */
+
+        .modal-overlay {
+
+            position: fixed;
+
+            top: 0;
+
+            left: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            background-color: rgba(0, 0, 0, 0.7);
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            z-index: 1000;
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+
+        }
+
+        .modal-overlay.show {
+
+            opacity: 1;
+
+            visibility: visible;
+
+        }
+
+        .modal-content {
+
+            background-color: #1a202c; /* Dark background */
+
+            padding: 30px;
+
+            border-radius: 12px;
+
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+
+            text-align: center;
+
+            max-width: 400px;
+
+            width: 90%;
+
+            transform: translateY(-20px);
+
+            transition: transform 0.3s ease-in-out;
+
+        }
+
+        .modal-overlay.show .modal-content {
+
+            transform: translateY(0);
+
+        }
+
+        .modal-content h3 {
+
+            font-size: 1.8rem;
+
+            margin-bottom: 20px;
+
+            color: #e2e8f0;
+
+        }
+
+        .modal-content .modal-buttons button {
+
+            margin: 0 10px;
+
+            padding: 12px 25px;
+
+            font-size: 1.1rem;
+
+            font-weight: bold;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            transition: background-color 0.2s, transform 0.1s;
+
+        }
+
+        .modal-content .modal-buttons .confirm-yes {
+
+            background-color: #c53030;
+
+            color: white;
+
+        }
+
+        .modal-content .modal-buttons .confirm-yes:hover {
+
+            background-color: #9b2c2c;
+
+            transform: translateY(-1px);
+
+        }
+
+        .modal-content .modal-buttons .confirm-no {
+
+            background-color: #4a5568;
+
+            color: white;
+
+        }
+
+        .modal-content .modal-buttons .confirm-no:hover {
+
+            background-color: #2d3748;
+
+            transform: translateY(-1px);
+
+        }
+
+
+
+        /* Responsive adjustments */
+
+        @media (max-width: 768px) {
+
+            .scoreboard-container, .controls-container {
+
+                padding: 15px;
+
+            }
+
+            .team-name {
+
+                font-size: 1.8rem;
+
+            }
+
+            .score {
+
+                font-size: 3.5rem;
+
+                width: 90px;
+
+            }
+
+            .inning-display {
+
+                font-size: 2.2rem;
+
+            }
+
+            .bso-container span {
+
+                width: 30px;
+
+                height: 30px;
+
+                margin: 0 4px;
+
+            }
+
+            .bso-label {
+
+                font-size: 0.9rem;
+
+            }
+
+            .control-btn {
+
+                padding: 10px 12px;
+
+                font-size: 0.95rem;
+
+            }
+
+            .modal-content {
+
+                padding: 20px;
+
+            }
+
+            .modal-content h3 {
+
+                font-size: 1.5rem;
+
+            }
+
+            .modal-content .modal-buttons button {
+
+                padding: 10px 20px;
+
+                font-size: 1rem;
+
+            }
+
+        }
+
+
+
+        @media (max-width: 480px) {
+
+            .scoreboard-container, .controls-container {
+
+                padding: 10px;
+
+            }
+
+            .team-name {
+
+                font-size: 1.5rem;
+
+                padding: 4px 6px;
+
+            }
+
+            .score {
+
+                font-size: 3rem;
+
+                width: 70px;
+
+            }
+
+            .inning-display {
+
+                font-size: 1.8rem;
+
+            }
+
+            .bso-container span {
+
+                width: 25px;
+
+                height: 25px;
+
+                margin: 0 3px;
+
+            }
+
+            .bso-label {
+
+                font-size: 0.8rem;
+
+            }
+
+            .control-btn {
+
+                padding: 8px 10px;
+
+                font-size: 0.85rem;
+
+            }
+
+            .grid-cols-3 {
+
+                grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 columns on small screens */
+
+            }
+
+            .grid-cols-3 > div:nth-child(3) { /* Move inning controls to new row */
+
+                grid-column: span 2;
+
+            }
+
+            .modal-content h3 {
+
+                font-size: 1.3rem;
+
+            }
+
+            .modal-content .modal-buttons button {
+
+                padding: 8px 15px;
+
+                font-size: 0.9rem;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+
+
+    <div id="scoreboard" class="scoreboard-container">
+
+        <!-- 상단: 팀 점수 및 이닝 정보 -->
+
+        <div class="flex justify-between items-center mb-6">
+
+            <!-- Away Team -->
+
+            <div class="text-center flex-1">
+
+                <div id="away-team-name" contenteditable="true" class="team-name">AWAY</div>
+
+            </div>
+
+            <div id="away-score" class="score">0</div>
+
+
+
+            <!-- Inning -->
+
+            <div class="text-center mx-4">
+
+                <div id="inning" class="inning-display">1</div>
+
+                <div id="inning-half" class="text-2xl font-semibold text-gray-300">▲ 초</div>
+
+            </div>
+
+
+
+            <!-- Home Team -->
+
+            <div id="home-score" class="score">0</div>
+
+            <div class="text-center flex-1">
+
+                <div id="home-team-name" contenteditable="true" class="team-name">HOME</div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- 하단: BSO 카운트 -->
+
+        <div class="flex justify-center items-center space-x-8 mt-4">
+
+            <div class="text-center">
+
+                <div class="bso-label">B</div>
+
+                <div id="balls" class="flex mt-2 bso-container">
+
+                    <span class="ball"></span>
+
+                    <span class="ball"></span>
+
+                    <span class="ball"></span>
+
+                </div>
+
+            </div>
+
+            <div class="text-center">
+
+                <div class="bso-label">S</div>
+
+                <div id="strikes" class="flex mt-2 bso-container">
+
+                    <span class="strike"></span>
+
+                    <span class="strike"></span>
+
+                </div>
+
+            </div>
+
+            <div class="text-center">
+
+                <div class="bso-label">O</div>
+
+                <div id="outs" class="flex mt-2 bso-container">
+
+                    <span class="out"></span>
+
+                    <span class="out"></span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- 컨트롤 패널 -->
+
+    <div id="controls" class="controls-container">
+
+        <div class="grid grid-cols-3 gap-4 text-center">
+
+            <!-- 점수 컨트롤 -->
+
+            <div class="flex flex-col space-y-3">
+
+                <button onclick="changeScore('away', 1)" class="control-btn">AWAY +1</button>
+
+                <button onclick="changeScore('away', -1)" class="control-btn">AWAY -1</button>
+
+            </div>
+
+            <div class="flex flex-col space-y-3">
+
+                 <button onclick="changeScore('home', 1)" class="control-btn">HOME +1</button>
+
+                 <button onclick="changeScore('home', -1)" class="control-btn">HOME -1</button>
+
+            </div>
+
+             <!-- 이닝 컨트롤 -->
+
+            <div class="flex flex-col space-y-3">
+
+                <button onclick="nextHalf()" class="control-btn">이닝 교대</button>
+
+                <button onclick="resetInning()" class="control-btn">이닝 리셋</button>
+
+            </div>
+
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 mt-6 text-center">
+
+            <!-- BSO 컨트롤 -->
+
+            <button onclick="addBall()" class="control-btn">볼 </button>
+
+            <button onclick="addStrike()" class="control-btn">스트라이크 </button>
+
+            <button onclick="addOut()" class="control-btn">아웃 </button>
+
+        </div>
+
+        <div class="mt-6">
+
+            <button onclick="showConfirmModal()" class="w-full control-btn reset-btn">전체 초기화</button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- Custom Confirmation Modal -->
+
+    <div id="confirmModal" class="modal-overlay">
+
+        <div class="modal-content">
+
+            <h3>모든 기록을 초기화하시겠습니까?</h3>
+
+            <div class="modal-buttons flex justify-center mt-6">
+
+                <button class="confirm-yes" onclick="confirmReset(true)">예</button>
+
+                <button class="confirm-no" onclick="confirmReset(false)">아니오</button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <script>
+
+        // Global state object to manage scoreboard data
+
+        const state = {
+
+            awayScore: 0,
+
+            homeScore: 0,
+
+            inning: 1,
+
+            isTop: true, // true: Top of the inning (초), false: Bottom of the inning (말)
+
+            balls: 0,
+
+            strikes: 0,
+
+            outs: 0
+
+        };
+
+
+
+        // UI element references
+
+        const ui = {
+
+            awayScore: document.getElementById('away-score'),
+
+            homeScore: document.getElementById('home-score'),
+
+            inning: document.getElementById('inning'),
+
+            inningHalf: document.getElementById('inning-half'),
+
+            balls: document.querySelectorAll('#balls .ball'),
+
+            strikes: document.querySelectorAll('#strikes .strike'),
+
+            outs: document.querySelectorAll('#outs .out'),
+
+            awayTeamName: document.getElementById('away-team-name'),
+
+            homeTeamName: document.getElementById('home-team-name'),
+
+            confirmModal: document.getElementById('confirmModal')
+
+        };
+
+
+
+        /**
+
+         * Updates the score for a given team.
+
+         * @param {string} team - 'away' or 'home'
+
+         * @param {number} value - Amount to change the score by (+1 or -1)
+
+         */
+
+        function changeScore(team, value) {
+
+            if (team === 'away') {
+
+                state.awayScore = Math.max(0, state.awayScore + value); // Ensure score doesn't go below 0
+
+            } else {
+
+                state.homeScore = Math.max(0, state.homeScore + value); // Ensure score doesn't go below 0
+
+            }
+
+            updateUI(); // Refresh the display
+
+        }
+
+
+
+        /**
+
+         * Increments the ball count. Resets B/S if 4 balls are reached.
+
+         */
+
+        function addBall() {
+
+            if (state.balls < 4) {
+
+                state.balls++;
+
+            }
+
+            updateUI(); // Update UI immediately to show the new ball count
+
+            if (state.balls === 4) {
+
+                // If 4 balls, reset balls and strikes after a short delay for visual feedback
+
+                setTimeout(() => {
+
+                    state.balls = 0;
+
+                    state.strikes = 0;
+
+                    updateUI();
+
+                }, 500);
+
+            }
+
+        }
+
+
+
+        /**
+
+         * Increments the strike count. Adds an out if 3 strikes are reached.
+
+         */
+
+        function addStrike() {
+
+            if (state.strikes < 3) {
+
+                state.strikes++;
+
+            }
+
+            updateUI(); // Update UI immediately to show the new strike count
+
+            if (state.strikes === 3) {
+
+                // If 3 strikes, add an out and reset balls/strikes after a short delay
+
+                setTimeout(() => {
+
+                    state.balls = 0;
+
+                    state.strikes = 0;
+
+                    addOut(true); // Indicate that this out is due to strikes
+
+                }, 500);
+
+            }
+
+        }
+
+
+
+        /**
+
+         * Increments the out count. Resets B/S and changes inning if 3 outs are reached.
+
+         * @param {boolean} fromStrike - True if the out was caused by 3 strikes, false otherwise.
+
+         */
+
+        function addOut(fromStrike = false) {
+
+            if (state.outs < 3) {
+
+                state.outs++;
+
+            }
+
+            // Only reset B/S if the out wasn't already triggered by 3 strikes (which handles its own reset)
+
+            if (!fromStrike) {
+
+                state.balls = 0;
+
+                state.strikes = 0;
+
+            }
+
+            updateUI(); // Update UI immediately to show the new out count
+
+            
+
+            if (state.outs === 3) {
+
+                // If 3 outs, change inning after a short delay
+
+                setTimeout(() => {
+
+                    nextHalf();
+
+                }, 500);
+
+            }
+
+        }
+
+
+
+        /**
+
+         * Advances to the next half-inning or full inning.
+
+         * Resets balls, strikes, and outs.
+
+         */
+
+        function nextHalf() {
+
+            if (state.isTop) { // If it's the top of the inning, switch to the bottom
+
+                state.isTop = false;
+
+            } else { // If it's the bottom of the inning, switch to the next inning's top
+
+                state.isTop = true;
+
+                state.inning++;
+
+            }
+
+            state.balls = 0;
+
+            state.strikes = 0;
+
+            state.outs = 0;
+
+            updateUI(); // Refresh the display
+
+        }
+
+        
+
+        /**
+
+         * Resets the inning to 1 and sets it to the top half.
+
+         */
+
+        function resetInning() {
+
+            state.inning = 1;
+
+            state.isTop = true;
+
+            state.balls = 0; // Also reset BSO when resetting inning
+
+            state.strikes = 0;
+
+            state.outs = 0;
+
+            updateUI(); // Refresh the display
+
+        }
+
+
+
+        /**
+
+         * Shows the custom confirmation modal for resetting the board.
+
+         */
+
+        function showConfirmModal() {
+
+            ui.confirmModal.classList.add('show');
+
+        }
+
+
+
+        /**
+
+         * Hides the custom confirmation modal and performs reset if confirmed.
+
+         * @param {boolean} confirmed - True if the user confirmed the reset, false otherwise.
+
+         */
+
+        function confirmReset(confirmed) {
+
+            ui.confirmModal.classList.remove('show'); // Hide modal first
+
+            if (confirmed) {
+
+                state.awayScore = 0;
+
+                state.homeScore = 0;
+
+                state.inning = 1;
+
+                state.isTop = true;
+
+                state.balls = 0;
+
+                state.strikes = 0;
+
+                state.outs = 0;
+
+                ui.awayTeamName.innerText = 'AWAY'; // Reset team names
+
+                ui.homeTeamName.innerText = 'HOME';
+
+                updateUI(); // Refresh the display with reset values
+
+            }
+
+        }
+
+
+
+        /**
+
+         * Updates all UI elements based on the current state.
+
+         */
+
+        function updateUI() {
+
+            ui.awayScore.innerText = state.awayScore;
+
+            ui.homeScore.innerText = state.homeScore;
+
+            ui.inning.innerText = state.inning;
+
+            ui.inningHalf.innerText = state.isTop ? '▲ 초' : '▼ 말';
+
+
+
+            // Update BSO indicators
+
+            updateBSO(ui.balls, state.balls);
+
+            updateBSO(ui.strikes, state.strikes);
+
+            updateBSO(ui.outs, state.outs);
+
+        }
+
+
+
+        /**
+
+         * Helper function to update the visual state of BSO indicators.
+
+         * @param {NodeList} elements - HTML elements representing the indicators (e.g., all ball spans)
+
+         * @param {number} count - The current count for that indicator (balls, strikes, or outs)
+
+         */
+
+        function updateBSO(elements, count) {
+
+            elements.forEach((el, index) => {
+
+                if (index < count) {
+
+                    el.classList.add('active'); // Add 'active' class if index is less than count
+
+                } else {
+
+                    el.classList.remove('active'); // Remove 'active' class otherwise
+
+                }
+
+            });
+
+        }
+
+
+
+        // Initial UI rendering when the page loads
+
+        document.addEventListener('DOMContentLoaded', updateUI);
+
+    </script>
+
+</body>
+
+</html>
+
